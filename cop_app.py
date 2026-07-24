@@ -48,19 +48,23 @@ def render_grid_header():
     st.markdown("<hr style='margin: 5px 0 15px 0;'>", unsafe_allow_html=True)
 
 def render_grid_row(name, symbol, unit, key, result_val, is_cop=False):
-    c1, c2, c3, c4, c5 = st.columns([2, 1, 1, 2, 2])
-    c1.markdown(f"<div style='padding-top:10px;'>{name}</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div style='padding-top:10px;'>{symbol}</div>", unsafe_allow_html=True)
-    c3.markdown(f"<div style='padding-top:10px;'>{unit}</div>", unsafe_allow_html=True)
+    # Streamlit 최신 기능으로 상하 높이를 자동으로 중앙(center)에 맞춥니다.
+    try:
+        c1, c2, c3, c4, c5 = st.columns([2, 1, 1, 2, 2], vertical_alignment="center")
+    except:
+        c1, c2, c3, c4, c5 = st.columns([2, 1, 1, 2, 2])
+        
+    # HTML 태그를 제거하여 Streamlit이 $ 수식을 정상적으로 인식하도록 변경
+    c1.markdown(name)
+    c2.markdown(symbol)
+    c3.markdown(unit)
     
-    # 텍스트 입력창 (라벨 숨김 처리로 표 형태 유지)
     with c4:
         input_val = st.text_input("입력", key=key, label_visibility="collapsed")
         
-    # 결과값 출력 (강조 색상 적용)
     color = "#0066cc" if "H" in symbol else "#cc0000"
     res_str = format_val(result_val, is_cop)
-    c5.markdown(f"<div style='padding-top:10px; color:{color}; font-weight:bold;'>{res_str}</div>", unsafe_allow_html=True)
+    c5.markdown(f"<div style='color:{color}; font-weight:bold; font-size:16px;'>{res_str}</div>", unsafe_allow_html=True)
     
     return input_val
 
@@ -70,13 +74,12 @@ tab1, tab2 = st.tabs(["📊 COP & 열량 계산기", "📐 시스템 계통도 �
 with tab1:
     st.subheader("데이터 입력 및 결과 확인")
     st.caption("표의 '알려진 값' 열에 최소 2개의 데이터를 입력하면, 우측 '계산된 값' 열에 결과가 즉시 표시됩니다.")
-    st.text("") # 여백
+    st.text("")
     
     # ====== 고단 사이클 (High Stage) ======
     st.markdown("#### 🔼 고단 사이클 (High Stage)")
     render_grid_header()
     
-    # 1차적으로 입력창만 먼저 그리고, 이전 입력값을 가져와서 계산
     qe_h_in = st.session_state.get('qe_h', '')
     w_h_in = st.session_state.get('w_h', '')
     qc_h_in = st.session_state.get('qc_h', '')
@@ -84,7 +87,6 @@ with tab1:
     
     qe_h, w_h, qc_h, cop_h = solve_stage(qe_h_in, w_h_in, qc_h_in, cop_h_in)
     
-    # 계산된 결과를 바탕으로 다시 표 렌더링
     render_grid_row("증발열량", "$q_{eH}$", "kW", "qe_h", qe_h)
     render_grid_row("압축기 일량", "$w_H$", "kW", "w_h", w_h)
     render_grid_row("응축열량", "$q_{cH}$", "kW", "qc_h", qc_h)
@@ -113,7 +115,7 @@ with tab2:
     
     with col_img:
         st.subheader("이원 냉동 사이클 P&ID")
-        # 실제 도면 이미지 파일명으로 변경하여 사용하세요 (예: "diagram.png")
+        # 실제 도면 이미지 파일명으로 변경 (예: "diagram.png")
         st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Cascade_refrigeration_system.svg/600px-Cascade_refrigeration_system.svg.png", use_container_width=True)
         
     with col_desc:
